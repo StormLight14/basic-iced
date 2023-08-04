@@ -113,8 +113,7 @@ impl Sandbox for App {
                     button("Increment").on_press(Message::IncrementPressed),
                     text(self.counter_value.to_string()).size(50),
                     button("Decrement").on_press(Message::DecrementPressed),
-                    container(PageButton::view(&PageButton {button_type: ButtonType::NextPage})).width(Length::Fill).center_x(),
-                    container(PageButton::view(&PageButton {button_type: ButtonType::PreviousPage})).width(Length::Fill).center_x(),
+                    PageButtons::view(&PageButtons {})
                 
                 ]
                 .padding(20)
@@ -126,8 +125,7 @@ impl Sandbox for App {
                     column![
                         progress_bar(0.0..=100.0, self.progress_bar_value),
                         slider(0.0..=100.0, self.progress_bar_value, Message::SliderMoved).step(0.01),
-                        container(PageButton::view(&PageButton {button_type: ButtonType::NextPage})).width(Length::Fill).center_x(),
-                        container(PageButton::view(&PageButton {button_type: ButtonType::PreviousPage})).width(Length::Fill).center_x(),
+                        PageButtons::view(&PageButtons {})
                     ]
                     
                     
@@ -140,8 +138,7 @@ impl Sandbox for App {
                 column![
                     text_input("Enter your name...", &self.name).on_input(Message::NameInputted),
                     text(format!("Hello, {}", self.name)).size(15),
-                    container(PageButton::view(&PageButton {button_type: ButtonType::NextPage})).width(Length::Fill).center_x(),
-                    container(PageButton::view(&PageButton {button_type: ButtonType::PreviousPage})).width(Length::Fill).center_x(),
+                    PageButtons::view(&PageButtons {})
                 ]
             }
             
