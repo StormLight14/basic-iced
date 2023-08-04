@@ -1,8 +1,6 @@
-use iced::futures;
-use iced::theme::ProgressBar;
-use iced::widget::{column, container, row, text, Text, button, slider, progress_bar, text_input};
+use iced::widget::{column, container, text, button, slider, progress_bar, text_input};
 use iced::{
-    Alignment, Sandbox, Color, Command, Element, Length, Settings, Theme,
+    Alignment, Sandbox, Element, Length, Settings
 };
 
 pub fn main() -> iced::Result {
@@ -204,7 +202,10 @@ impl PageButtons {
                 PageButton::view(&PageButton {button_type: ButtonType::NextPage}),
                 PageButton::view(&PageButton {button_type: ButtonType::PreviousPage}),
             ]
-        ).into()
+        )
+        .width(Length::Fill)
+        .center_x()
+        .into()
     }
     
 }
