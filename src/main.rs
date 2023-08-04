@@ -9,9 +9,18 @@ pub fn main() -> iced::Result {
     App::run(Settings::default())
 }
 
-enum App {
-    Counter {value: i32},
-    ProgressBar {value: f32},
+enum State{
+    Counter,
+    ProgressBar,
+    NotFound
+}
+
+struct App {
+    state: State,
+    counter_value: i32,
+    progress_bar_value: f32,
+    page: u8,
+    pages: u8,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -27,13 +36,20 @@ impl Sandbox for App {
     type Message = Message;
 
     fn new() -> Self {
-        Self::Counter { value: 0 } // Initialize the App with the Counter variant and value 0
+        Self {
+            state: State::Counter,
+            counter_value: 0,
+            progress_bar_value: 0.0,
+            page: 1,
+            pages: 2,
+        }
     }
 
     fn title(&self) -> String {
-        let subtitle = match self {
-            App::Counter { .. } => "Counter",
-            App::ProgressBar { .. }=> "Progress Bar"
+        let subtitle = match self.state {
+            State::Counter => "Counter",
+            State::ProgressBar => "Progress Bar",
+            State::NotFound => "Page not found"
         };
 
         format!("{subtitle} - Iced")
@@ -42,44 +58,49 @@ impl Sandbox for App {
     fn update(&mut self, message: Message) {
         match message {
             Message::IncrementPressed => {
-                if let App::Counter { value } = self {
-                    *value += 1; // Access and update the value when in Counter variant
-                }
+                self.counter_value += 1;
             }
             Message::DecrementPressed => {
-                if let App::Counter { value } = self {
-                    *value -= 1; // Access and update the value when in Counter variant
-                }
+                self.counter_value -= 1;
             }
             Message::SliderMoved(slider_value) => {
-                if let App::ProgressBar { value } = self {
-                    *value = slider_value
-                }
+                self.progress_bar_value = slider_value
             }
             Message::PageForward => {
-                if let App::ProgressBar { value } = self {
-                    *self = App::ProgressBar { value: *value}
+                if self.page < self.pages {
+                    self.page += 1;
                 } else {
-                    *self = App::ProgressBar { value: 0.0 }
+                    self.page = 1;
                 }
             }
             Message::PageBack => {
-                if let App::Counter { value } = self {
-                    *self = App::Counter { value: *value }
+                if self.page > 1 {
+                    self.page -= 1;
                 } else {
-                    *self = App::Counter { value: 0 }
+                    self.page = self.pages;
                 }
             }
-                
+        }
+
+        match self.page {
+            1 => {
+                self.state = State::Counter
+            }
+            2 => {
+                self.state = State::ProgressBar
+            }
+            _ => {
+                self.state = State::NotFound
+            }
         }
     }
 
     fn view(&self) -> Element<Message> {
-        let content = match self {
-            App::Counter { value } => { // Pattern match the variant and destructure the value
+        let content = match self.state {
+            State::Counter => { // Pattern match the variant and destructure the value
                 column![
                     button("Increment").on_press(Message::IncrementPressed),
-                    text(value.to_string()).size(50),
+                    text(self.counter_value.to_string()).size(50),
                     button("Decrement").on_press(Message::DecrementPressed),
                     PageButton::view(&PageButton {button_type: ButtonType::NextPage})
                 
@@ -88,11 +109,11 @@ impl Sandbox for App {
                 .align_items(Alignment::Center)
             }
 
-            App::ProgressBar { value }=> {
+            State::ProgressBar => {
                 column![
                     column![
-                        progress_bar(0.0..=100.0, *value),
-                        slider(0.0..=100.0, *value, Message::SliderMoved).step(0.01),
+                        progress_bar(0.0..=100.0, self.progress_bar_value),
+                        slider(0.0..=100.0, self.progress_bar_value, Message::SliderMoved).step(0.01),
                         container(PageButton::view(&PageButton {button_type: ButtonType::PreviousPage})).width(Length::Fill).center_x()
                     ]
                     
@@ -100,6 +121,10 @@ impl Sandbox for App {
                 ]
                 .padding(20)
                     .into()
+            }
+            
+            State::NotFound => {
+                column![].into()
             }
         };
 
