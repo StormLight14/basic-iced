@@ -201,7 +201,7 @@ impl PageButtons {
             column![
                 PageButton::view(&PageButton {button_type: ButtonType::NextPage}),
                 PageButton::view(&PageButton {button_type: ButtonType::PreviousPage}),
-            ]
+            ].align_items(Alignment::Center)
         )
         .width(Length::Fill)
         .center_x()
