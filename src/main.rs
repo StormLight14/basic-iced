@@ -1,6 +1,6 @@
-use iced::widget::{column, container, text, button, slider, progress_bar, text_input};
+use iced::widget::{column, container, text, button, slider, progress_bar, text_input, radio};
 use iced::{
-    Alignment, Sandbox, Element, Length, Settings
+    Alignment, Sandbox, Theme, Element, Length, Settings
 };
 
 pub fn main() -> iced::Result {
@@ -11,10 +11,12 @@ enum State{
     Counter,
     ProgressBar,
     NameInput,
+    ThemeSelect,
     NotFound
 }
 
 struct App {
+    theme: Theme,
     state: State,
     counter_value: i32,
     progress_bar_value: f32,
@@ -23,8 +25,16 @@ struct App {
     pages: u8,
 }
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+enum ThemeType {
+    Light,
+    Dark,
+}
+
+
 #[derive(Debug, Clone)]
 enum Message {
+    ThemeChanged(ThemeType),
     IncrementPressed,
     DecrementPressed,
     SliderMoved(f32),
@@ -38,12 +48,13 @@ impl Sandbox for App {
 
     fn new() -> Self {
         Self {
+            theme: Theme::Dark,
             state: State::Counter,
             counter_value: 0,
             progress_bar_value: 0.0,
             name: String::new(),
             page: 1,
-            pages: 3,
+            pages: 4,
         }
     }
 
@@ -52,6 +63,7 @@ impl Sandbox for App {
             State::Counter => "Counter",
             State::ProgressBar => "Progress Bar",
             State::NameInput => "Name Input",
+            State::ThemeSelect => "Theme Select",
             State::NotFound => "Page not found"
         };
 
@@ -60,6 +72,17 @@ impl Sandbox for App {
 
     fn update(&mut self, message: Message) {
         match message {
+            Message::ThemeChanged(theme_type) => {
+                println!("{:?}", theme_type);
+                match theme_type {
+                    ThemeType::Light => {
+                        self.theme = Theme::Light
+                    }
+                    ThemeType::Dark => {
+                        self.theme = Theme::Dark
+                    }
+                }
+            }
             Message::IncrementPressed => {
                 self.counter_value += 1;
             }
@@ -97,6 +120,9 @@ impl Sandbox for App {
             }
             3 => {
                 self.state = State::NameInput
+            }
+            4 => {
+                self.state = State::ThemeSelect
             }
             _ => {
                 self.state = State::NotFound
@@ -139,6 +165,32 @@ impl Sandbox for App {
                     PageButtons::view(&PageButtons {})
                 ]
             }
+
+            State::ThemeSelect => {
+                    let choose_theme =
+                    [ThemeType::Light, ThemeType::Dark]
+                        .iter()
+                        .fold(
+                            column![text("Choose a theme:")].spacing(10),
+                            |column, theme| {
+                                column.push(radio(
+                                    format!("{theme:?}"),
+                                    *theme,
+                                    Some(match self.theme {
+                                        Theme::Light => ThemeType::Light,
+                                        Theme::Dark => ThemeType::Dark,
+                                        _ => ThemeType::Dark,
+                                    }),
+                                    Message::ThemeChanged,
+                        ))
+                        
+                    },
+                );
+                let content = column![
+                    choose_theme.push(PageButtons::view(&PageButtons {}))
+                ].width(Length::Fill).align_items(Alignment::Center);
+                content
+            }
             
             State::NotFound => {
                 column![].into()
@@ -151,6 +203,10 @@ impl Sandbox for App {
         .center_x()
         .center_y()
         .into()
+    }
+
+    fn theme(&self) -> Theme {
+        self.theme.clone()
     }
 }
 
