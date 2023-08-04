@@ -1,6 +1,6 @@
 use iced::futures;
 use iced::theme::ProgressBar;
-use iced::widget::{column, container, row, text, Text, button, slider, progress_bar};
+use iced::widget::{column, container, row, text, Text, button, slider, progress_bar, text_input};
 use iced::{
     Alignment, Sandbox, Color, Command, Element, Length, Settings, Theme,
 };
@@ -12,6 +12,7 @@ pub fn main() -> iced::Result {
 enum State{
     Counter,
     ProgressBar,
+    NameInput,
     NotFound
 }
 
@@ -19,15 +20,17 @@ struct App {
     state: State,
     counter_value: i32,
     progress_bar_value: f32,
+    name: String,
     page: u8,
     pages: u8,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 enum Message {
     IncrementPressed,
     DecrementPressed,
     SliderMoved(f32),
+    NameInputted(String),
     PageBack,
     PageForward,
 }
@@ -40,8 +43,9 @@ impl Sandbox for App {
             state: State::Counter,
             counter_value: 0,
             progress_bar_value: 0.0,
+            name: String::new(),
             page: 1,
-            pages: 2,
+            pages: 3,
         }
     }
 
@@ -49,6 +53,7 @@ impl Sandbox for App {
         let subtitle = match self.state {
             State::Counter => "Counter",
             State::ProgressBar => "Progress Bar",
+            State::NameInput => "Name Input",
             State::NotFound => "Page not found"
         };
 
@@ -65,6 +70,9 @@ impl Sandbox for App {
             }
             Message::SliderMoved(slider_value) => {
                 self.progress_bar_value = slider_value
+            }
+            Message::NameInputted(name) => {
+                self.name = name
             }
             Message::PageForward => {
                 if self.page < self.pages {
@@ -89,6 +97,9 @@ impl Sandbox for App {
             2 => {
                 self.state = State::ProgressBar
             }
+            3 => {
+                self.state = State::NameInput
+            }
             _ => {
                 self.state = State::NotFound
             }
@@ -102,7 +113,8 @@ impl Sandbox for App {
                     button("Increment").on_press(Message::IncrementPressed),
                     text(self.counter_value.to_string()).size(50),
                     button("Decrement").on_press(Message::DecrementPressed),
-                    PageButton::view(&PageButton {button_type: ButtonType::NextPage})
+                    container(PageButton::view(&PageButton {button_type: ButtonType::NextPage})).width(Length::Fill).center_x(),
+                    container(PageButton::view(&PageButton {button_type: ButtonType::PreviousPage})).width(Length::Fill).center_x(),
                 
                 ]
                 .padding(20)
@@ -114,13 +126,23 @@ impl Sandbox for App {
                     column![
                         progress_bar(0.0..=100.0, self.progress_bar_value),
                         slider(0.0..=100.0, self.progress_bar_value, Message::SliderMoved).step(0.01),
-                        container(PageButton::view(&PageButton {button_type: ButtonType::PreviousPage})).width(Length::Fill).center_x()
+                        container(PageButton::view(&PageButton {button_type: ButtonType::NextPage})).width(Length::Fill).center_x(),
+                        container(PageButton::view(&PageButton {button_type: ButtonType::PreviousPage})).width(Length::Fill).center_x(),
                     ]
                     
                     
                 ]
                 .padding(20)
                     .into()
+            }
+
+            State::NameInput => {
+                column![
+                    text_input("Enter your name...", &self.name).on_input(Message::NameInputted),
+                    text(format!("Hello, {}", self.name)).size(15),
+                    container(PageButton::view(&PageButton {button_type: ButtonType::NextPage})).width(Length::Fill).center_x(),
+                    container(PageButton::view(&PageButton {button_type: ButtonType::PreviousPage})).width(Length::Fill).center_x(),
+                ]
             }
             
             State::NotFound => {
@@ -156,7 +178,7 @@ impl PageButton {
                 column![
                     button("Next Page").on_press(Message::PageForward)
                 ]
-                .padding(30)
+                .padding(20)
                 .align_items(Alignment::Center)
                 .into()
             }
@@ -171,4 +193,21 @@ impl PageButton {
         }
         
     }
+}
+
+#[derive(Debug, Clone)]
+struct PageButtons {
+
+}
+
+impl PageButtons {
+    fn view(&self) -> Element<Message> {
+        container(
+            column![
+                PageButton::view(&PageButton {button_type: ButtonType::NextPage}),
+                PageButton::view(&PageButton {button_type: ButtonType::PreviousPage}),
+            ]
+        ).into()
+    }
+    
 }
